@@ -9,6 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.skillbox.authservice.config.TestConfig;
+import ru.skillbox.authservice.domain.Role;
 import ru.skillbox.authservice.domain.User;
 import ru.skillbox.authservice.dto.UserDto;
 import ru.skillbox.authservice.repository.UserRepository;
@@ -49,11 +50,13 @@ public class UserServiceTest {
                 .thenAnswer(invocation -> invocation.getArgument(0) + "_some_fake_encoding");
         user = new User(
                 "Petrov",
-                passwordEncoder.encode("superpass")
+                passwordEncoder.encode("superpass"),
+                Collections.singletonList(new Role("ROLE_USER"))
         );
         newUser = new User(
                 "Ivanov",
-                passwordEncoder.encode("superpass99")
+                passwordEncoder.encode("superpass99"),
+                Collections.singletonList(new Role("ROLE_USER"))
         );
         users = Collections.singletonList(user);
     }
