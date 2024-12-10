@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -13,6 +15,7 @@ import ru.skillbox.orderservice.domain.OrderStatus;
 import ru.skillbox.orderservice.dto.OrderDto;
 import ru.skillbox.orderservice.dto.StatusDto;
 import ru.skillbox.orderservice.repository.OrderRepository;
+import ru.skillbox.orderservice.repository.OrderSpecifications;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -49,6 +52,7 @@ class OrderServiceTest {
                 OrderStatus.REGISTERED
         );
         order.setId(1L);
+        order.setUserId(1L);
         order.setCreationTime(LocalDateTime.now());
         order.setModifiedTime(LocalDateTime.now());
 
@@ -57,8 +61,9 @@ class OrderServiceTest {
 
     @Test
     void getAllOrders() {
-        when(orderRepository.findAll()).thenReturn(orders);
-        assertDoesNotThrow(() -> orderService.getAllOrders());
+        when(orderRepository.findAll(OrderSpecifications.byUser(1L), Pageable.ofSize(1)))
+                .thenReturn(new PageImpl<>(orders));
+        assertDoesNotThrow(() -> orderService.getAllOrders(1L, false, Pageable.ofSize(1)));
     }
 
     @Test
@@ -83,7 +88,7 @@ class OrderServiceTest {
         );
         when(orderRepository.saveAndFlush(any(Order.class))).thenReturn(order);
 
-        assertDoesNotThrow(() -> orderService.addOrder(orderDto));
+        assertDoesNotThrow(() -> orderService.addOrder(1L, orderDto));
     }
 
     @Test

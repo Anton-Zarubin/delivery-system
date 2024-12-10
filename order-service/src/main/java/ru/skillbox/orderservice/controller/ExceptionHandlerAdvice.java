@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.skillbox.orderservice.dto.ErrorDto;
+import ru.skillbox.orderservice.exception.AccessDeniedException;
 import ru.skillbox.orderservice.exception.OrderNotFoundException;
 
 import java.time.LocalDateTime;
@@ -16,5 +17,11 @@ public class ExceptionHandlerAdvice {
     public ResponseEntity<ErrorDto> notFoundExceptionHandler(Exception ex) {
         ErrorDto errorDto = new ErrorDto(ex.getMessage(), LocalDateTime.now());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDto);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorDto> accessDeniedExceptionHandler(AccessDeniedException ex) {
+        ErrorDto errorDto = new ErrorDto(ex.getMessage(), LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorDto);
     }
 }
