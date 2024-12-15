@@ -18,6 +18,7 @@ import ru.skillbox.orderservice.domain.OrderStatus;
 import ru.skillbox.orderservice.dto.StatusDto;
 import ru.skillbox.orderservice.service.OrderService;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -57,7 +58,7 @@ public class OrderControllerTest {
                 "Moscow, st.Taganskaya 150",
                 "Moscow, st.Tulskaya 24",
                 "Order #112",
-                1500L,
+                BigDecimal.ONE,
                 OrderStatus.REGISTERED
         );
         order.setUserId(1L);
@@ -65,7 +66,7 @@ public class OrderControllerTest {
                 "Moscow, st.Taganskaya 150",
                 "Moscow, st.Dubininskaya 39",
                 "Order #342",
-                2450L,
+                BigDecimal.TEN,
                 OrderStatus.REGISTERED
         );
         orders = Collections.singletonList(order);
@@ -122,7 +123,7 @@ public class OrderControllerTest {
                 "Order #342",
                 "Moscow, st.Taganskaya 150",
                 "Moscow, st.Dubininskaya 39",
-                2450L
+                BigDecimal.TEN
         );
         when(orderService.addOrder(1L, orderDto)).thenReturn(Optional.of(newOrder));
         mvc.perform(
@@ -134,7 +135,7 @@ public class OrderControllerTest {
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(
                                         "{\"description\":\"Order #342\",\"departureAddress\":\"Moscow, st.Taganskaya 150\"," +
-                                                "\"destinationAddress\":\"Moscow, st.Dubininskaya 39\",\"cost\":2450}"
+                                                "\"destinationAddress\":\"Moscow, st.Dubininskaya 39\",\"cost\":10}"
                                 )
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
