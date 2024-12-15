@@ -62,6 +62,7 @@ public class AuthenticationFilter implements GatewayFilter {
         Claims claims = jwtUtil.getAllClaimsFromToken(jwtToken);
         exchange.getRequest().mutate()
                 .header("id", String.valueOf(claims.get("id")))
+                .header("roles", String.valueOf(claims.get("roles")))
                 .build();
     }
 }

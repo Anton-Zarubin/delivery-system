@@ -7,6 +7,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -58,6 +60,7 @@ public class OrderControllerTest {
                 1500L,
                 OrderStatus.REGISTERED
         );
+        order.setUserId(1L);
         newOrder = new Order(
                 "Moscow, st.Taganskaya 150",
                 "Moscow, st.Dubininskaya 39",
@@ -70,8 +73,18 @@ public class OrderControllerTest {
 
     @Test
     public void getAllOrders() throws Exception {
-        when(orderService.getAllOrders()).thenReturn(orders);
-        mvc.perform(get("/order"))
+        when(orderService.getAllOrders(1L, false, PageRequest.of(0, 1)))
+                .thenReturn(new PageImpl<>(orders));
+        mvc.perform(
+                        get("/order")
+                                .with(request -> {
+                                    request.addHeader("id", 1L);
+                                    request.addHeader("roles", "ROLE_USER");
+                                    return request;
+                                })
+                                .param("page", "0")
+                                .param("size", "1")
+                )
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(order.getDescription())));
     }
@@ -79,9 +92,28 @@ public class OrderControllerTest {
     @Test
     public void getOrder() throws Exception {
         when(orderService.getOrder(1L)).thenReturn(order);
-        mvc.perform(get("/order/1"))
+        mvc.perform(get("/order/1")
+                        .with(request -> {
+                            request.addHeader("id", 1L);
+                            request.addHeader("roles", "ROLE_USER");
+                            return request;
+                        })
+                )
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(order.getDescription())));
+    }
+
+    @Test
+    public void getOrderWithException() throws Exception {
+        when(orderService.getOrder(1L)).thenReturn(order);
+        mvc.perform(get("/order/1")
+                        .with(request -> {
+                            request.addHeader("id", 2L);
+                            request.addHeader("roles", "ROLE_USER");
+                            return request;
+                        })
+                )
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -92,9 +124,13 @@ public class OrderControllerTest {
                 "Moscow, st.Dubininskaya 39",
                 2450L
         );
-        when(orderService.addOrder(orderDto)).thenReturn(Optional.of(newOrder));
+        when(orderService.addOrder(1L, orderDto)).thenReturn(Optional.of(newOrder));
         mvc.perform(
                         post("/order")
+                                .with(request -> {
+                                    request.addHeader("id", 1L);
+                                    return request;
+                                })
                                 .accept(MediaType.APPLICATION_JSON)
                                 .content(
                                         "{\"description\":\"Order #342\",\"departureAddress\":\"Moscow, st.Taganskaya 150\"," +

@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.skillbox.authservice.domain.Role;
 import ru.skillbox.authservice.domain.User;
 import ru.skillbox.authservice.dto.UserDto;
 import ru.skillbox.authservice.repository.UserRepository;
@@ -25,9 +26,9 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -66,11 +67,13 @@ public class UserControllerTest {
                 .thenAnswer(invocation -> invocation.getArgument(0) + "_some_fake_encoding");
         user = new User(
                 "Petrov",
-                passwordEncoder.encode("superpass")
+                passwordEncoder.encode("superpass"),
+                Collections.singletonList(new Role("ROLE_USER"))
         );
         newUser = new User(
                 "Ivanov",
-                passwordEncoder.encode("superpass99")
+                passwordEncoder.encode("superpass99"),
+                Collections.singletonList(new Role("ROLE_USER"))
         );
         users = Collections.singletonList(user);
     }
@@ -105,5 +108,13 @@ public class UserControllerTest {
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(content().string(containsString(newUser.getName())));
+    }
+
+    @Test
+    public void deleteUser() throws Exception {
+        doNothing().when(userService).deleteUser("Sidorov");
+        mvc.perform(delete("/user/delete/Sidorov"))
+                .andDo(print())
+                .andExpect(status().isNoContent());
     }
 }
