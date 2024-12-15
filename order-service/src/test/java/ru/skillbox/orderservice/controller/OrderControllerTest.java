@@ -2,7 +2,6 @@ package ru.skillbox.orderservice.controller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -12,10 +11,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.skillbox.orderservice.domain.Order;
-import ru.skillbox.orderservice.domain.OrderDto;
+import ru.skillbox.orderservice.dto.OrderDto;
 import ru.skillbox.orderservice.domain.OrderStatus;
-import ru.skillbox.orderservice.domain.StatusDto;
-import ru.skillbox.orderservice.repository.OrderRepository;
+import ru.skillbox.orderservice.dto.StatusDto;
 import ru.skillbox.orderservice.service.OrderService;
 
 import java.util.Collections;
@@ -23,8 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -37,9 +34,6 @@ public class OrderControllerTest {
 
     @Autowired
     private MockMvc mvc;
-
-    @MockBean
-    private OrderRepository orderRepository;
 
     @MockBean
     private OrderService orderService;
@@ -75,16 +69,16 @@ public class OrderControllerTest {
     }
 
     @Test
-    public void listOrders() throws Exception {
-        Mockito.when(orderRepository.findAll()).thenReturn(orders);
+    public void getAllOrders() throws Exception {
+        when(orderService.getAllOrders()).thenReturn(orders);
         mvc.perform(get("/order"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(order.getDescription())));
     }
 
     @Test
-    public void listOrder() throws Exception {
-        Mockito.when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    public void getOrder() throws Exception {
+        when(orderService.getOrder(1L)).thenReturn(order);
         mvc.perform(get("/order/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(order.getDescription())));
@@ -98,7 +92,7 @@ public class OrderControllerTest {
                 "Moscow, st.Dubininskaya 39",
                 2450L
         );
-        Mockito.when(orderService.addOrder(orderDto)).thenReturn(Optional.of(newOrder));
+        when(orderService.addOrder(orderDto)).thenReturn(Optional.of(newOrder));
         mvc.perform(
                         post("/order")
                                 .accept(MediaType.APPLICATION_JSON)
