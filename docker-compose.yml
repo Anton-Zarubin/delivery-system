@@ -13,6 +13,14 @@ services:
       - ./pg-init-scripts:/docker-entrypoint-initdb.d
       - database-data:/var/lib/postgresql/data/
 
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9998:9090"
+    volumes:
+      - ./monitoring-storage/config/prometheus.yml:/etc/prometheus/prometheus.yml
+
   zookeeper:
     image: wurstmeister/zookeeper:latest
     ports:
