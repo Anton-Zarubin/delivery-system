@@ -25,6 +25,10 @@ springdoc:
         url: /order-service/v3/api-docs
       - name: payment-service
         url: /payment-service/v3/api-docs
+      - name: inventory-service
+        url: /inventory-service/v3/api-docs
+      - name: delivery-service
+        url: /delivery-service/v3/api-docs
 
 # could be used for debugging
 #logging:

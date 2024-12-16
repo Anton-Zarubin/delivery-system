@@ -59,6 +59,13 @@ public class PaymentServiceImpl implements PaymentService {
 
             String comment = "Order paid";
             StatusDto statusDto = createStatusDto(OrderStatus.PAID, comment);
+            kafkaService.produce((InventoryKafkaDto.builder()
+                    .userId(userId))
+                    .orderId(orderId)
+                    .products(paymentKafkaDto.getProducts())
+                    .departureAddress(paymentKafkaDto.getDepartureAddress())
+                    .destinationAddress(paymentKafkaDto.getDestinationAddress())
+                    .build());
             kafkaService.produce(new OrderKafkaDto(orderId, statusDto));
 
         } catch (Exception ex) {
@@ -66,6 +73,34 @@ public class PaymentServiceImpl implements PaymentService {
                 StatusDto statusDto = createStatusDto(OrderStatus.UNEXPECTED_FAILURE, ex.getMessage());
                 kafkaService.produce(new ErrorKafkaDto(paymentKafkaDto.getOrderId(), statusDto));
             }
+
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+
+    @Transactional
+    @Override
+    public void resetPayment(ErrorKafkaDto errorKafkaDto) {
+        try {
+            Optional<Payment> optionalPayment
+                    = paymentRepository.findByOrderId(errorKafkaDto.getOrderId());
+
+            if (optionalPayment.isEmpty()) {
+                throw new ResourceNotFoundException(MessageFormat.format("Payment for order ID {0} not found",
+                        errorKafkaDto.getOrderId()));
+            }
+
+            Payment payment = optionalPayment.get();
+            Wallet wallet = payment.getWallet();
+            wallet.setBalance(wallet.getBalance().add(payment.getCost()));
+            walletRepository.save(wallet);
+            paymentRepository.delete(payment);
+
+            kafkaService.produce(errorKafkaDto);
+
+        } catch (Exception ex) {
+            StatusDto statusDto = createStatusDto(OrderStatus.UNEXPECTED_FAILURE, ex.getMessage());
+            kafkaService.produce(new ErrorKafkaDto(errorKafkaDto.getOrderId(), statusDto));
 
             throw new RuntimeException(ex.getMessage());
         }
