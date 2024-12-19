@@ -2,7 +2,7 @@ package ru.skillbox.authservice.controller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -14,15 +14,18 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.skillbox.authservice.domain.User;
+import ru.skillbox.authservice.dto.UserDto;
 import ru.skillbox.authservice.repository.UserRepository;
 import ru.skillbox.authservice.security.SecurityConfiguration;
+import ru.skillbox.authservice.service.TokenService;
+import ru.skillbox.authservice.service.UserService;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -38,13 +41,16 @@ public class UserControllerTest {
     private MockMvc mvc;
 
     @MockBean
+    private UserService userService;
+
+    @MockBean
     private UserRepository userRepository;
 
     @MockBean
     private PasswordEncoder passwordEncoder;
 
     @Configuration
-    @ComponentScan(basePackageClasses = {UserController.class, SecurityConfiguration.class})
+    @ComponentScan(basePackageClasses = {UserController.class, TokenService.class,SecurityConfiguration.class})
     public static class TestConf {
     }
 
@@ -56,7 +62,7 @@ public class UserControllerTest {
 
     @BeforeEach
     public void setUp() {
-        Mockito.when(passwordEncoder.encode(anyString()))
+        when(passwordEncoder.encode(anyString()))
                 .thenAnswer(invocation -> invocation.getArgument(0) + "_some_fake_encoding");
         user = new User(
                 "Petrov",
@@ -71,7 +77,7 @@ public class UserControllerTest {
 
     @Test
     public void getUser() throws Exception {
-        Mockito.when(userRepository.findByName(user.getName())).thenReturn(Optional.of(user));
+        when(userService.getUser(user.getName())).thenReturn(user);
         mvc.perform(get("/user/Petrov"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -80,7 +86,7 @@ public class UserControllerTest {
 
     @Test
     public void getAllUsers() throws Exception {
-        Mockito.when(userRepository.findAll()).thenReturn(users);
+        when(userService.getAllUsers()).thenReturn(users);
         mvc.perform(get("/user/"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -89,13 +95,13 @@ public class UserControllerTest {
 
     @Test
     public void createUser() throws Exception {
-        Mockito.when(userRepository.save(refEq(newUser))).thenReturn(newUser);
+        when(userService.createUser(ArgumentMatchers.any(UserDto.class))).thenReturn(newUser);
         mvc.perform(
-                post("/user/signup")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Ivanov\",\"password\":\"superpass99\"}")
-                        .contentType(MediaType.APPLICATION_JSON)
-        )
+                        post("/user/signup")
+                                .accept(MediaType.APPLICATION_JSON)
+                                .content("{\"name\":\"Ivanov\",\"password\":\"superpass99\"}")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(content().string(containsString(newUser.getName())));
