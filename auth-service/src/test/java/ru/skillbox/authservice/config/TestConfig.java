@@ -3,6 +3,7 @@ package ru.skillbox.authservice.config;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import ru.skillbox.authservice.repository.RoleRepository;
 import ru.skillbox.authservice.repository.UserRepository;
 import ru.skillbox.authservice.service.UserService;
 import ru.skillbox.authservice.service.impl.UserServiceImpl;
@@ -18,12 +19,17 @@ public class TestConfig {
     }
 
     @Bean
+    public RoleRepository roleRepository() {
+        return mock(RoleRepository.class);
+    }
+
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return mock(PasswordEncoder.class);
     }
 
     @Bean
     public UserService userService() {
-        return new UserServiceImpl(userRepository(), passwordEncoder());
+        return new UserServiceImpl(userRepository(), roleRepository(), passwordEncoder());
     }
 }

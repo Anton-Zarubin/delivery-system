@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.skillbox.authservice.domain.Role;
 import ru.skillbox.authservice.domain.User;
 import ru.skillbox.authservice.dto.UserDto;
 import ru.skillbox.authservice.repository.UserRepository;
@@ -18,11 +19,12 @@ import ru.skillbox.authservice.security.SecurityConfiguration;
 import ru.skillbox.authservice.service.TokenService;
 import ru.skillbox.authservice.service.UserService;
 
+import java.util.Collections;
+
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -68,7 +70,8 @@ public class UserControllerNotAuthenticatedTest {
                 .thenAnswer(invocation -> invocation.getArgument(0) + "_some_fake_encoding");
         User newUser = new User(
                 "Ivanov",
-                passwordEncoder.encode("superpass99")
+                passwordEncoder.encode("superpass99"),
+                Collections.singletonList(new Role("ROLE_USER"))
         );
         when(userService.createUser(ArgumentMatchers.any(UserDto.class))).thenReturn(newUser);
         mvc.perform(
@@ -79,5 +82,12 @@ public class UserControllerNotAuthenticatedTest {
                 )
                 .andExpect(status().isCreated())
                 .andExpect(content().string(containsString(newUser.getName())));
+    }
+
+    @Test
+    public void deleteUser() throws Exception {
+        mvc.perform(delete("/user/delete/Petrov"))
+                .andDo(print())
+                .andExpect(status().isForbidden());
     }
 }
