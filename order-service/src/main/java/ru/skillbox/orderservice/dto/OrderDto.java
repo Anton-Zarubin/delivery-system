@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
+import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
@@ -19,5 +20,5 @@ public class OrderDto {
     private String destinationAddress;
 
     @Positive(message = "Cost must be positive")
-    private Long cost;
+    private BigDecimal cost;
 }

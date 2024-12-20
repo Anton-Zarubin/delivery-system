@@ -2,5 +2,6 @@ package ru.skillbox.orderservice.domain;
 
 public enum ServiceName {
 
-    ORDER_SERVICE
+    ORDER_SERVICE,
+    PAYMENT_SERVICE
 }
