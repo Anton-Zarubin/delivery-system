@@ -12,6 +12,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.skillbox.orderservice.config.TestConfig;
 import ru.skillbox.orderservice.domain.Order;
 import ru.skillbox.orderservice.domain.OrderStatus;
+import ru.skillbox.orderservice.dto.OrderDetailsDto;
 import ru.skillbox.orderservice.dto.OrderDto;
 import ru.skillbox.orderservice.dto.StatusDto;
 import ru.skillbox.orderservice.repository.OrderRepository;
@@ -20,6 +21,7 @@ import ru.skillbox.orderservice.repository.OrderSpecifications;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,6 +58,7 @@ class OrderServiceTest {
         order.setUserId(1L);
         order.setCreationTime(LocalDateTime.now());
         order.setModifiedTime(LocalDateTime.now());
+        order.addOrderDetails(new HashMap<>(Collections.singletonMap(1L, 1)));
 
         orders = Collections.singletonList(order);
     }
@@ -81,10 +84,12 @@ class OrderServiceTest {
 
     @Test
     void addOrder() {
+        OrderDetailsDto orderDetailsDto = new OrderDetailsDto(1L, 1);
         OrderDto orderDto = new OrderDto(
                 "Order #112",
                 "Moscow, st.Taganskaya 150",
                 "Moscow, st.Tulskaya 24",
+                List.of(orderDetailsDto),
                 BigDecimal.ONE
         );
         when(orderRepository.saveAndFlush(any(Order.class))).thenReturn(order);

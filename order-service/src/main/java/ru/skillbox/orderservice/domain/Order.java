@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Setter
 @Getter
@@ -36,6 +37,14 @@ public class Order {
     @Column(name = "destination_address")
     private String destinationAddress;
 
+    @OneToMany(
+            mappedBy = "order",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<OrderDetails> orderDetails = new ArrayList<>();
+
+
     @Column(name = "cost")
     private BigDecimal cost;
 
@@ -59,6 +68,22 @@ public class Order {
     private List<OrderStatusHistory> orderStatusHistory = new ArrayList<>();
 
     public Order(
+            String description,
+            String departureAddress,
+            String destinationAddress,
+            List<OrderDetails> orderDetails,
+            BigDecimal cost,
+            OrderStatus status
+    ) {
+        this.description = description;
+        this.departureAddress = departureAddress;
+        this.destinationAddress = destinationAddress;
+        this.orderDetails = orderDetails;
+        this.cost = cost;
+        this.status = status;
+    }
+
+    public Order(
             String departureAddress,
             String destinationAddress,
             String description,
@@ -70,6 +95,14 @@ public class Order {
         this.description = description;
         this.cost = cost;
         this.status = status;
+    }
+
+    public void addOrderDetails(Map<Long, Integer> productQuantityMap) {
+        List<OrderDetails> orderDetails = new ArrayList<>();
+        productQuantityMap.forEach((key, value) ->
+                orderDetails.add(new OrderDetails(null, this, key, value)));
+
+        getOrderDetails().addAll(orderDetails);
     }
 
     public void addStatusHistory(OrderStatus status, ServiceName serviceName, String comment) {
