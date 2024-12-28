@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import ru.skillbox.authservice.dto.ErrorDto;
+import ru.skillbox.authservice.exception.AccessDeniedException;
 import ru.skillbox.authservice.exception.UserNotFoundException;
 
 import java.sql.SQLException;
@@ -55,5 +56,11 @@ public class ExceptionHandlerAdvice {
     public ResponseEntity<ErrorDto> notFoundExceptionHandler(UserNotFoundException ex) {
         ErrorDto errorDto = new ErrorDto(ex.getMessage(), LocalDateTime.now());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorDto);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorDto> accessDeniedExceptionHandler(AccessDeniedException ex) {
+        ErrorDto errorDto = new ErrorDto(ex.getMessage(), LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorDto);
     }
 }

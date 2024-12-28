@@ -1,19 +1,20 @@
 package ru.skillbox.orderservice.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import ru.skillbox.orderservice.domain.Order;
 import ru.skillbox.orderservice.dto.OrderDto;
 import ru.skillbox.orderservice.dto.StatusDto;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface OrderService {
 
-    List<Order> getAllOrders();
+    Page<Order> getAllOrders(Long userId, boolean isAdmin, Pageable pageable);
 
     Order getOrder(Long id);
 
-    Optional<Order> addOrder(OrderDto orderDto);
+    Optional<Order> addOrder(Long userId, OrderDto orderDto);
 
     void updateOrderStatus(Long id, StatusDto statusDto);
 }

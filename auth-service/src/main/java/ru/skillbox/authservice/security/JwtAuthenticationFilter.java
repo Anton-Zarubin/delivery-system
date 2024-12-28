@@ -7,13 +7,14 @@ import org.springframework.security.authentication.InternalAuthenticationService
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import ru.skillbox.authservice.domain.User;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Collections;
 
 import static ru.skillbox.authservice.security.SecurityConstants.TOKEN_PREFIX;
 
@@ -23,9 +24,13 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     private final JwtUtil jwtUtil;
 
-    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+    private final UserDetailsService userDetailsService;
+
+    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtUtil jwtUtil,
+                                   UserDetailsService userDetailsService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
@@ -43,7 +48,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         UsernamePasswordAuthenticationToken userToken = new UsernamePasswordAuthenticationToken(
                 credentials.getName(),
                 credentials.getPassword(),
-                Collections.emptyList()
+                userDetailsService.loadUserByUsername(credentials.getName()).getAuthorities()
         );
         return authenticationManager.authenticate(userToken);
     }
@@ -51,7 +56,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
                                             Authentication authResult) {
-        String token = jwtUtil.generateToken(((User) authResult.getPrincipal()).getName());
+        String token = jwtUtil.generateToken(((UserDetails) authResult.getPrincipal()));
         response.addHeader(HttpHeaders.AUTHORIZATION, TOKEN_PREFIX + token);
     }
 }

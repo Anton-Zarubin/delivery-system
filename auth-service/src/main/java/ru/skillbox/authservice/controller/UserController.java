@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.skillbox.authservice.aop.annotation.CheckOwnership;
 import ru.skillbox.authservice.dto.UserDto;
 import ru.skillbox.authservice.domain.User;
 import ru.skillbox.authservice.service.UserService;
@@ -44,6 +45,7 @@ public class UserController {
     }
 
     @Operation(summary = "Delete user by name", security = @SecurityRequirement(name = "bearerAuth"))
+    @CheckOwnership(entityType = "user")
     @DeleteMapping(value = "/delete/{username}")
     public ResponseEntity<Void> deleteUser(@PathVariable String username) {
         userService.deleteUser(username);
