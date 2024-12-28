@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @Entity
-@Table(name = "orders")
+@Table(name = "order_status_history")
 public class OrderStatusHistory {
 
     @Id
