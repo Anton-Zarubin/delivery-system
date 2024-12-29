@@ -7,10 +7,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.skillbox.orderservice.dto.PaymentKafkaDto;
 import ru.skillbox.orderservice.exception.OrderNotFoundException;
 import ru.skillbox.orderservice.domain.*;
 import ru.skillbox.orderservice.dto.OrderDto;
-import ru.skillbox.orderservice.dto.OrderKafkaDto;
 import ru.skillbox.orderservice.dto.StatusDto;
 import ru.skillbox.orderservice.repository.OrderRepository;
 import ru.skillbox.orderservice.repository.OrderSpecifications;
@@ -58,7 +58,15 @@ public class OrderServiceImpl implements OrderService {
         newOrder.setUserId(userId);
         newOrder.addStatusHistory(newOrder.getStatus(), ServiceName.ORDER_SERVICE, "Order created");
         Order order = orderRepository.saveAndFlush(newOrder);
-        kafkaService.produce(OrderKafkaDto.toKafkaDto(order));
+        log.info("Order with id {} was registered at {}", order.getId(),order.getCreationTime());
+
+        kafkaService.produce(PaymentKafkaDto.builder()
+                .userId(userId)
+                .orderId(order.getId())
+                .cost(order.getCost())
+                .departureAddress(order.getDepartureAddress())
+                .destinationAddress(order.getDestinationAddress())
+                .build());
         return Optional.of(order);
     }
 
@@ -73,7 +81,7 @@ public class OrderServiceImpl implements OrderService {
         }
         order.setStatus(statusDto.getStatus());
         order.addStatusHistory(statusDto.getStatus(), statusDto.getServiceName(), statusDto.getComment());
-        Order resultOrder = orderRepository.saveAndFlush(order);
-        kafkaService.produce(OrderKafkaDto.toKafkaDto(resultOrder));
+        orderRepository.save(order);
+        log.info("Status for order with id {} changed to: {}", id, order.getStatus());
     }
 }

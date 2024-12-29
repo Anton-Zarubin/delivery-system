@@ -1,29 +1,11 @@
 package ru.skillbox.orderservice.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import ru.skillbox.orderservice.domain.Order;
 
 @Data
-@AllArgsConstructor
 public class OrderKafkaDto {
 
-    private Long id;
+    private Long orderId;
 
-    private String status;
-
-    private String creationTime;
-
-    private String modifiedTime;
-
-    public static OrderKafkaDto toKafkaDto(Order order) {
-
-        return new OrderKafkaDto(
-                order.getId(),
-                order.getStatus().toString(),
-                order.getCreationTime().toString(),
-                order.getModifiedTime().toString()
-        );
-
-    }
+    private StatusDto statusDto;
 }

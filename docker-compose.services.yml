@@ -34,6 +34,20 @@ services:
     depends_on:
       - discovery
 
+  payment-service:
+    image: delivery/payment-service:0.0.1-SNAPSHOT
+    ports:
+      - "8081:8081"
+    environment:
+      - CONFIG_URI=http://discovery:8761
+      - EUREKA_URI=http://discovery:8761/eureka
+      - DATABASE_URL=jdbc:postgresql://psql:5432/payment_db
+      - DATABASE_USER=postgre_user
+      - DATABASE_PASSWORD=postgre_secret_password
+    restart: always
+    depends_on:
+      - discovery
+
   gateway:
     image: delivery/gateway:0.0.1-SNAPSHOT
     ports:
@@ -46,3 +60,4 @@ services:
       - discovery
       - auth-service
       - order-service
+      - payment-service

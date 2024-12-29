@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,7 @@ public class Order {
     private String destinationAddress;
 
     @Column(name = "cost")
-    private Long cost;
+    private BigDecimal cost;
 
     @CreationTimestamp
     @Column(name = "creation_time")
@@ -61,7 +62,7 @@ public class Order {
             String departureAddress,
             String destinationAddress,
             String description,
-            Long cost,
+            BigDecimal cost,
             OrderStatus status
     ) {
         this.departureAddress = departureAddress;

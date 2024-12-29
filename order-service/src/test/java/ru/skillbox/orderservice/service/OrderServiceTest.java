@@ -17,6 +17,7 @@ import ru.skillbox.orderservice.dto.StatusDto;
 import ru.skillbox.orderservice.repository.OrderRepository;
 import ru.skillbox.orderservice.repository.OrderSpecifications;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -48,7 +49,7 @@ class OrderServiceTest {
                 "Moscow, st.Taganskaya 150",
                 "Moscow, st.Tulskaya 24",
                 "Order #112",
-                1500L,
+                BigDecimal.ONE,
                 OrderStatus.REGISTERED
         );
         order.setId(1L);
@@ -84,7 +85,7 @@ class OrderServiceTest {
                 "Order #112",
                 "Moscow, st.Taganskaya 150",
                 "Moscow, st.Tulskaya 24",
-                1500L
+                BigDecimal.ONE
         );
         when(orderRepository.saveAndFlush(any(Order.class))).thenReturn(order);
 
@@ -94,7 +95,7 @@ class OrderServiceTest {
     @Test
     void updateOrderStatus() {
         when(orderRepository.findById(1L)).thenReturn(Optional.ofNullable(order));
-        when(orderRepository.saveAndFlush(any(Order.class))).thenReturn(order);
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
 
         assertDoesNotThrow(() -> orderService.updateOrderStatus(1L, new StatusDto(OrderStatus.PAID)));
     }
