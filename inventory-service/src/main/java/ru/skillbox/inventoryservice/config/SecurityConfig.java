@@ -30,6 +30,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .antMatchers(HttpMethod.GET, "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/category/view/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/product/view/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/actuator/prometheus").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(filter, BasicAuthenticationFilter.class);

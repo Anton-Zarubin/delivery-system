@@ -16,7 +16,12 @@ public class RouterValidator {
             Pattern.compile("/payment-service/v3/api-docs.*"),
             Pattern.compile("/inventory-service/category/view.*"),
             Pattern.compile("/inventory-service/product/view.*"),
-            Pattern.compile("/inventory-service/v3/api-docs.*")
+            Pattern.compile("/inventory-service/v3/api-docs.*"),
+            Pattern.compile("/auth/actuator/prometheus"),
+            Pattern.compile("/order-service/actuator/prometheus"),
+            Pattern.compile("/payment-service/actuator/prometheus"),
+            Pattern.compile("/inventory-service/actuator/prometheus"),
+            Pattern.compile("/delivery-service/actuator/prometheus")
     );
 
     public static final Predicate<ServerHttpRequest> isSecured =
