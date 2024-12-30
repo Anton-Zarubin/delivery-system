@@ -20,6 +20,8 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     payment-service-topic: payment
+    error-payment-service-topic: payment-error
+    inventory-service-topic: inventory
     order-service-topic: order
     error-order-service-topic: order-error
 

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.skillbox.orderservice.dto.OrderDetailsDto;
 import ru.skillbox.orderservice.dto.PaymentKafkaDto;
 import ru.skillbox.orderservice.exception.OrderNotFoundException;
 import ru.skillbox.orderservice.domain.*;
@@ -17,7 +18,10 @@ import ru.skillbox.orderservice.repository.OrderSpecifications;
 import ru.skillbox.orderservice.service.KafkaService;
 import ru.skillbox.orderservice.service.OrderService;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -48,6 +52,10 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public Optional<Order> addOrder(Long userId, OrderDto orderDto) {
+        List<OrderDetailsDto> products = orderDto.getProducts();
+        Map<Long, Integer> productQuantityMap = orderDto.getProducts()
+                .stream()
+                .collect(Collectors.toMap(OrderDetailsDto::getProductId, OrderDetailsDto::getCount));
         Order newOrder = new Order(
                 orderDto.getDepartureAddress(),
                 orderDto.getDestinationAddress(),
@@ -56,6 +64,7 @@ public class OrderServiceImpl implements OrderService {
                 OrderStatus.REGISTERED
         );
         newOrder.setUserId(userId);
+        newOrder.addOrderDetails(productQuantityMap);
         newOrder.addStatusHistory(newOrder.getStatus(), ServiceName.ORDER_SERVICE, "Order created");
         Order order = orderRepository.saveAndFlush(newOrder);
         log.info("Order with id {} was registered at {}", order.getId(),order.getCreationTime());
@@ -63,6 +72,7 @@ public class OrderServiceImpl implements OrderService {
         kafkaService.produce(PaymentKafkaDto.builder()
                 .userId(userId)
                 .orderId(order.getId())
+                .products(products)
                 .cost(order.getCost())
                 .departureAddress(order.getDepartureAddress())
                 .destinationAddress(order.getDestinationAddress())

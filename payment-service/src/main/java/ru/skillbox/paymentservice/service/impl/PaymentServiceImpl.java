@@ -1,6 +1,7 @@
 package ru.skillbox.paymentservice.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.skillbox.paymentservice.domain.Payment;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.Optional;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -59,6 +61,13 @@ public class PaymentServiceImpl implements PaymentService {
 
             String comment = "Order paid";
             StatusDto statusDto = createStatusDto(OrderStatus.PAID, comment);
+            kafkaService.produce((InventoryKafkaDto.builder()
+                    .userId(userId))
+                    .orderId(orderId)
+                    .products(paymentKafkaDto.getProducts())
+                    .departureAddress(paymentKafkaDto.getDepartureAddress())
+                    .destinationAddress(paymentKafkaDto.getDestinationAddress())
+                    .build());
             kafkaService.produce(new OrderKafkaDto(orderId, statusDto));
 
         } catch (Exception ex) {
@@ -66,6 +75,36 @@ public class PaymentServiceImpl implements PaymentService {
                 StatusDto statusDto = createStatusDto(OrderStatus.UNEXPECTED_FAILURE, ex.getMessage());
                 kafkaService.produce(new ErrorKafkaDto(paymentKafkaDto.getOrderId(), statusDto));
             }
+
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+
+    @Transactional
+    @Override
+    public void resetPayment(ErrorKafkaDto errorKafkaDto) {
+        try {
+            Optional<Payment> optionalPayment
+                    = paymentRepository.findByOrderId(errorKafkaDto.getOrderId());
+
+            if (optionalPayment.isEmpty()) {
+                throw new EntityNotFoundException(MessageFormat.format("Payment for order with id {0} not found",
+                        errorKafkaDto.getOrderId()));
+            }
+
+            Payment payment = optionalPayment.get();
+            Wallet wallet = payment.getWallet();
+            wallet.setBalance(wallet.getBalance().add(payment.getCost()));
+            walletRepository.save(wallet);
+            paymentRepository.delete(payment);
+            log.info("Payment for order with id {} has been cancelled. The account balance is {}.",
+                    errorKafkaDto.getOrderId(), wallet.getBalance());
+
+            kafkaService.produce(errorKafkaDto);
+
+        } catch (Exception ex) {
+            StatusDto statusDto = createStatusDto(OrderStatus.UNEXPECTED_FAILURE, ex.getMessage());
+            kafkaService.produce(new ErrorKafkaDto(errorKafkaDto.getOrderId(), statusDto));
 
             throw new RuntimeException(ex.getMessage());
         }
@@ -80,6 +119,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setCost(cost);
         payment.setWallet(wallet);
         paymentRepository.save(payment);
+        log.info("Order with id {} has been paid. The account balance is {}.", orderId, wallet.getBalance());
     }
 
     private StatusDto createStatusDto(OrderStatus orderStatus, String comment) {

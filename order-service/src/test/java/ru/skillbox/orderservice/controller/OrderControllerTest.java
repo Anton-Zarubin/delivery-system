@@ -1,5 +1,6 @@
 package ru.skillbox.orderservice.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.skillbox.orderservice.domain.Order;
+import ru.skillbox.orderservice.dto.OrderDetailsDto;
 import ru.skillbox.orderservice.dto.OrderDto;
 import ru.skillbox.orderservice.domain.OrderStatus;
 import ru.skillbox.orderservice.dto.StatusDto;
@@ -20,6 +22,7 @@ import ru.skillbox.orderservice.service.OrderService;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +40,9 @@ public class OrderControllerTest {
 
     @Autowired
     private MockMvc mvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockBean
     private OrderService orderService;
@@ -62,6 +68,7 @@ public class OrderControllerTest {
                 OrderStatus.REGISTERED
         );
         order.setUserId(1L);
+        order.addOrderDetails(new HashMap<>(Collections.singletonMap(1L, 1)));
         newOrder = new Order(
                 "Moscow, st.Taganskaya 150",
                 "Moscow, st.Dubininskaya 39",
@@ -69,6 +76,7 @@ public class OrderControllerTest {
                 BigDecimal.TEN,
                 OrderStatus.REGISTERED
         );
+        newOrder.addOrderDetails(new HashMap<>(Collections.singletonMap(2L, 1)));
         orders = Collections.singletonList(order);
     }
 
@@ -119,10 +127,12 @@ public class OrderControllerTest {
 
     @Test
     public void addOrder() throws Exception {
+        OrderDetailsDto orderDetailsDto = new OrderDetailsDto(2L, 1);
         OrderDto orderDto = new OrderDto(
                 "Order #342",
                 "Moscow, st.Taganskaya 150",
                 "Moscow, st.Dubininskaya 39",
+                List.of(orderDetailsDto),
                 BigDecimal.TEN
         );
         when(orderService.addOrder(1L, orderDto)).thenReturn(Optional.of(newOrder));
@@ -133,10 +143,7 @@ public class OrderControllerTest {
                                     return request;
                                 })
                                 .accept(MediaType.APPLICATION_JSON)
-                                .content(
-                                        "{\"description\":\"Order #342\",\"departureAddress\":\"Moscow, st.Taganskaya 150\"," +
-                                                "\"destinationAddress\":\"Moscow, st.Dubininskaya 39\",\"cost\":10}"
-                                )
+                                .content(objectMapper.writeValueAsString(orderDto))
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isCreated());
